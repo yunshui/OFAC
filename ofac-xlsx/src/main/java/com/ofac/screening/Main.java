@@ -12,7 +12,7 @@ import java.time.LocalDate;
  */
 public class Main {
 
-    private static final LocalDate EXPIRY_DATE = LocalDate.of(2027, 10, 1);
+    private static final LocalDate EXPIRY_DATE = LocalDate.of(2026, 10, 1);
 
     public static void main(String[] args) throws Exception {
         if (!LocalDate.now().isBefore(EXPIRY_DATE)) {
@@ -27,7 +27,6 @@ public class Main {
         String user = "cbla";
         String pass = "Oper1234";
         String unit = "PEP00110";
-        String column = "English Name";
         Integer maxRows = null;
 
         for (int i = 0; i < args.length; i++) {
@@ -52,9 +51,6 @@ public class Main {
                     break;
                 case "--unit":
                     unit = args[++i];
-                    break;
-                case "--column":
-                    column = args[++i];
                     break;
                 case "-n":
                 case "--num":
@@ -81,7 +77,7 @@ public class Main {
         BlacklistApiClient client = new BlacklistApiClient(config);
         ScreeningEngine engine = new ScreeningEngine(client);
 
-        engine.run(inputFile, outputFile, column, maxRows);
+        engine.run(inputFile, outputFile, maxRows);
     }
 
     private static void printHelp() {
@@ -99,7 +95,6 @@ public class Main {
         System.out.println("  --user NAME          API user (default: cbla)");
         System.out.println("  --pass PASSWORD      API password (default: Oper1234)");
         System.out.println("  --unit CODE          API unit code (default: PEP00110)");
-        System.out.println("  --column NAME        Excel column header (default: English Name)");
         System.out.println("  -n, --num N          Process only first N rows");
         System.out.println("  -h, --help           Show this help");
     }

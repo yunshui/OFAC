@@ -9,18 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Reads names from an Excel file by locating a column header.
+ * Reads names from the first column of an Excel file, starting from the first row.
  */
 public class ExcelNameReader {
 
     /**
-     * Read non-empty string values from the specified column in the first sheet.
+     * Read non-empty string values from the first column (column 0) in the first sheet.
      *
-     * @param filePath  path to the .xlsx file
-     * @param columnName header text identifying the column
+     * @param filePath path to the .xlsx file
      * @return list of non-empty name strings
      */
-    public static List<String> readNames(String filePath, String columnName) throws IOException {
+    public static List<String> readNames(String filePath) throws IOException {
         List<String> names = new ArrayList<>();
 
         try (FileInputStream fis = new FileInputStream(filePath);
@@ -31,16 +30,11 @@ public class ExcelNameReader {
                 throw new IOException("No sheets found in " + filePath);
             }
 
-            int colIndex = findColumnIndex(sheet, columnName);
-            if (colIndex < 0) {
-                throw new IOException("Column '" + columnName + "' not found in sheet");
-            }
-
-            for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+            for (int r = 0; r <= sheet.getLastRowNum(); r++) {
                 Row row = sheet.getRow(r);
                 if (row == null) continue;
 
-                Cell cell = row.getCell(colIndex);
+                Cell cell = row.getCell(0);
                 if (cell == null) continue;
 
                 String val = getCellStringValue(cell).trim();
@@ -51,25 +45,6 @@ public class ExcelNameReader {
         }
 
         return names;
-    }
-
-    /**
-     * Find the column index whose header (first row) matches the given name.
-     */
-    private static int findColumnIndex(Sheet sheet, String columnName) {
-        Row headerRow = sheet.getRow(0);
-        if (headerRow == null) return -1;
-
-        for (int c = 0; c < headerRow.getLastCellNum(); c++) {
-            Cell cell = headerRow.getCell(c);
-            if (cell != null) {
-                String header = getCellStringValue(cell).trim();
-                if (header.equalsIgnoreCase(columnName)) {
-                    return c;
-                }
-            }
-        }
-        return -1;
     }
 
     private static String getCellStringValue(Cell cell) {

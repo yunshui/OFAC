@@ -28,14 +28,13 @@ public class ScreeningEngine {
      *
      * @param inputFile  input Excel file path
      * @param outputFile output Excel file path
-     * @param nameColumn column header for names
      * @param maxRows    max rows to process (null or <= 0 = all)
      */
-    public void run(String inputFile, String outputFile, String nameColumn, Integer maxRows)
+    public void run(String inputFile, String outputFile, Integer maxRows)
             throws Exception {
 
         System.out.println("Reading names from: " + inputFile);
-        List<String> names = ExcelNameReader.readNames(inputFile, nameColumn);
+        List<String> names = ExcelNameReader.readNames(inputFile);
 
         if (maxRows != null && maxRows > 0 && maxRows < names.size()) {
             names = names.subList(0, maxRows);
