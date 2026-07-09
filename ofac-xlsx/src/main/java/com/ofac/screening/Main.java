@@ -4,11 +4,11 @@ package com.ofac.screening;
  * CLI entry point for the OFAC screening tool.
  *
  * Usage:
- *   java -jar ofac-html-parser-1.0.0.jar \
+ *   java -jar ofac-xlsx-1.0.0.jar \
  *        -i input.xlsx -o output.xlsx -u http://folcbla-asia.icbc:3012/ \
  *        [--user cbla] [--pass Oper1234] [--unit PEP00110] [--column "English Name"] [-n 10]
  */
-public class Main1 {
+public class Main {
 
     public static void main(String[] args) throws Exception {
         String inputFile = null;
@@ -78,7 +78,7 @@ public class Main1 {
         System.out.println("OFAC Blacklist Screening Tool");
         System.out.println();
         System.out.println("Usage:");
-        System.out.println("  java -jar ofac-html-parser-1.0.0.jar [options]");
+        System.out.println("  java -jar ofac-xlsx-1.0.0.jar [options]");
         System.out.println();
         System.out.println("Required options:");
         System.out.println("  -i, --input PATH     Input Excel file (.xlsx)");
