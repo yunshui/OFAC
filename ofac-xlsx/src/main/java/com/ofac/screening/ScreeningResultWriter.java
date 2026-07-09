@@ -126,12 +126,7 @@ public class ScreeningResultWriter {
 
         rowNum = writeMetadataRow(sheet, rowNum, "Query Name", nr.getQueryName(), 3);
         if (r != null) {
-            rowNum = writeMetadataRow(sheet, rowNum, "Hit Detected", "false", 3);
-            rowNum = writeMetadataRow(sheet, rowNum, "Message ID", r.getMessageId(), 3);
-            rowNum = writeMetadataRow(sheet, rowNum, "List Date", r.getListDate(), 3);
-            rowNum = writeMetadataRow(sheet, rowNum, "List Author", r.getListAuthor(), 3);
-            rowNum = writeMetadataRow(sheet, rowNum, "List Title", r.getListTitle(), 3);
-            rowNum = writeMetadataRow(sheet, rowNum, "Transaction ID", r.getTransactionId(), 3);
+            rowNum = writeQueryMetadata(sheet, rowNum, r, 3);
         }
 
         Row msgRow = sheet.createRow(rowNum + 1);
@@ -156,9 +151,9 @@ public class ScreeningResultWriter {
         int metaCols = Math.max(numHits + 1, 4); // label col + hit cols; at least 4 for spacing
 
         rowNum = writeMetadataRow(sheet, rowNum, "Query Name", nr.getQueryName(), metaCols);
-        rowNum = writeMetadataRow(sheet, rowNum, "Hit Detected", String.valueOf(r.isHitDetected()), metaCols);
-        rowNum = writeMetadataRow(sheet, rowNum, "Message ID", r.getMessageId(), metaCols);
-        rowNum = writeMetadataRow(sheet, rowNum, "Total Hits", String.valueOf(r.getTotalHits()), metaCols);
+        if (r != null) {
+            rowNum = writeQueryMetadata(sheet, rowNum, r, metaCols);
+        }
 
         // --- Empty separator row ---
         rowNum++;
@@ -261,6 +256,40 @@ public class ScreeningResultWriter {
         valueCell.setCellStyle(wrapStyle);
 
         return rowNum + 1;
+    }
+
+    /**
+     * Write all available query metadata rows. Only non-null fields are written.
+     *
+     * @return updated rowNum
+     */
+    private int writeQueryMetadata(Sheet sheet, int rowNum, OFACQueryResult r, int totalCols) {
+        rowNum = writeMetadataRow(sheet, rowNum, "Hit Detected", String.valueOf(r.isHitDetected()), totalCols);
+        if (r.getTotalHits() != null) {
+            rowNum = writeMetadataRow(sheet, rowNum, "Total Hits", String.valueOf(r.getTotalHits()), totalCols);
+        }
+        rowNum = writeOptionalMetadataRow(sheet, rowNum, "Message ID", r.getMessageId(), totalCols);
+        rowNum = writeOptionalMetadataRow(sheet, rowNum, "List Date", r.getListDate(), totalCols);
+        rowNum = writeOptionalMetadataRow(sheet, rowNum, "List Author", r.getListAuthor(), totalCols);
+        rowNum = writeOptionalMetadataRow(sheet, rowNum, "List Version", r.getListVersion(), totalCols);
+        rowNum = writeOptionalMetadataRow(sheet, rowNum, "List Title", r.getListTitle(), totalCols);
+        rowNum = writeOptionalMetadataRow(sheet, rowNum, "List Generated With", r.getListGeneratedWith(), totalCols);
+        rowNum = writeOptionalMetadataRow(sheet, rowNum, "Transaction ID", r.getTransactionId(), totalCols);
+        rowNum = writeOptionalMetadataRow(sheet, rowNum, "Date", r.getDate(), totalCols);
+        rowNum = writeOptionalMetadataRow(sheet, rowNum, "Author", r.getAuthor(), totalCols);
+        rowNum = writeOptionalMetadataRow(sheet, rowNum, "Product Name", r.getProductName(), totalCols);
+        rowNum = writeOptionalMetadataRow(sheet, rowNum, "Product Version", r.getProductVersion(), totalCols);
+        rowNum = writeOptionalMetadataRow(sheet, rowNum, "Support Email", r.getSupportEmail(), totalCols);
+        rowNum = writeOptionalMetadataRow(sheet, rowNum, "Product Copyright", r.getProductCopyright(), totalCols);
+        return rowNum;
+    }
+
+    /**
+     * Write a metadata row only if the value is non-null and non-empty.
+     */
+    private int writeOptionalMetadataRow(Sheet sheet, int rowNum, String label, String value, int totalCols) {
+        if (value == null || value.isEmpty()) return rowNum;
+        return writeMetadataRow(sheet, rowNum, label, value, totalCols);
     }
 
     /**
