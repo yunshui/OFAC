@@ -1,13 +1,10 @@
 package com.ofac.parser.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.util.List;
 
 /**
  * 单个 Hit 的详细信息
  */
-@JsonInclude(JsonInclude.Include.ALWAYS)
 public class HitDetail {
 
     private Integer hitNumber;
