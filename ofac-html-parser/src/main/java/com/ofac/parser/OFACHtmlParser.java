@@ -49,7 +49,7 @@ public class OFACHtmlParser {
      * 解析 OFAC HTML 文件，返回结构化结果。
      */
     public static OFACQueryResult parse(File htmlFile) throws IOException {
-        String html = Files.readString(htmlFile.toPath(), StandardCharsets.UTF_8);
+        String html = new String(Files.readAllBytes(htmlFile.toPath()), StandardCharsets.UTF_8);
         return parse(html);
     }
 
@@ -98,6 +98,7 @@ public class OFACHtmlParser {
         result.setTotalHits(extractTotalHits(fullText));
         result.setHitsOverview(extractOverviewTable(doc));
         result.setHitDetails(extractHitDetails(doc, html, fullText));
+        extractMetadataTable(doc, result);
         return result;
     }
 
@@ -359,7 +360,19 @@ public class OFACHtmlParser {
                         detail.setNames(nameList);
                     }
                     if (dc.size() >= 2) detail.setCity(cleanCell(dc.get(1)));
-                    if (dc.size() >= 3) detail.setCountryRegion(cleanCell(dc.get(2)));
+                    if (dc.size() >= 3) {
+                        List<String> countryList = new ArrayList<>();
+                        Element countryCell = dc.get(2);
+                        for (Element p : countryCell.select("p, div, span, font")) {
+                            String t = p.text().replace('\u00A0', ' ').trim();
+                            if (!t.isEmpty() && !countryList.contains(t)) {
+                                countryList.add(t);
+                            }
+                        }
+                        if (!countryList.isEmpty()) {
+                            detail.setCountryRegion(countryList);
+                        }
+                    }
                 }
                 continue;
             }
@@ -409,14 +422,15 @@ public class OFACHtmlParser {
         }
 
         // 4. 用正则从 fullText 中提取剩余字段（仅当 row 解析未设置时）
-        if (detail.getCategories() == null) detail.setCategories(extractValueBetween(fullText, "CATEGORIES", "KEYWORDS"));
-        if (detail.getKeywords() == null)   detail.setKeywords(  extractValueBetween(fullText, "KEYWORDS",   "TYPE"));
-        if (detail.getType() == null)       detail.setType(      extractValueBetween(fullText, "TYPE",       "ADDRESS"));
-        if (detail.getAddress() == null)    detail.setAddress(   extractValueBetween(fullText, "ADDRESS",    "SEARCHED CODES", "SEARCHED"));
-        if (detail.getSearchedCodes() == null) detail.setSearchedCodes(extractValueBetween(fullText, "SEARCHED CODES", "BIC CODES"));
-        if (detail.getBicCodes() == null)   detail.setBicCodes(  extractValueBetween(fullText, "BIC CODES",  "NATIONAL ID"));
-        if (detail.getNationalId() == null) detail.setNationalId(extractValueBetween(fullText, "NATIONAL ID","PASSPORT NO"));
-        if (detail.getPassportNo() == null) detail.setPassportNo(extractValueBetween(fullText, "PASSPORT NO","PLACE OF BIRTH"));
+        // 注意：getter 可能返回 ""（nvl），用 isEmpty 判断
+        if (detail.getCategories() == null || detail.getCategories().isEmpty()) detail.setCategories(extractValueBetween(fullText, "CATEGORIES", "KEYWORDS"));
+        if (detail.getKeywords() == null || detail.getKeywords().isEmpty())   detail.setKeywords(  extractValueBetween(fullText, "KEYWORDS",   "TYPE"));
+        if (detail.getType() == null || detail.getType().isEmpty())       detail.setType(      extractValueBetween(fullText, "TYPE",       "ADDRESS"));
+        if (detail.getAddress() == null || detail.getAddress().isEmpty())    detail.setAddress(   extractValueBetween(fullText, "ADDRESS",    "SEARCHED CODES", "SEARCHED"));
+        if (detail.getSearchedCodes() == null || detail.getSearchedCodes().isEmpty()) detail.setSearchedCodes(extractValueBetween(fullText, "SEARCHED CODES", "BIC CODES"));
+        if (detail.getBicCodes() == null || detail.getBicCodes().isEmpty())   detail.setBicCodes(  extractValueBetween(fullText, "BIC CODES",  "NATIONAL ID"));
+        if (detail.getNationalId() == null || detail.getNationalId().isEmpty()) detail.setNationalId(extractValueBetween(fullText, "NATIONAL ID","PASSPORT NO"));
+        if (detail.getPassportNo() == null || detail.getPassportNo().isEmpty()) detail.setPassportNo(extractValueBetween(fullText, "PASSPORT NO","PLACE OF BIRTH"));
         // 注意: PLACE/DATE/USER INFO 依赖行解析, regex fallback 不可靠(Jsoup text顺序问题)
         detail.setOfficialReference(extractColonValue(fullText, "OFFICIAL REFERENCE", "ADDITIONAL INFO"));
         detail.setAdditionalInfo(   extractColonValue(fullText, "ADDITIONAL INFO", "RULE INFO"));
@@ -505,7 +519,6 @@ public class OFACHtmlParser {
             }
             try {
                 OFACQueryResult result = parse(f);
-                System.out.println("=== " + f.getName() + " ===");
                 System.out.println(toJson(result));
                 System.out.println();
             } catch (Exception e) {

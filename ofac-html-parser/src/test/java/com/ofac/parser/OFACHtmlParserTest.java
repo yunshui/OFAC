@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,7 +17,7 @@ class OFACHtmlParserTest {
 
     @Test
     void parseNoHit() throws Exception {
-        String html = Files.readString(Paths.get(BASE_DIR + "OFAC-OnLine_ No hit found1-陈大文.html"));
+        String html = new String(Files.readAllBytes(Paths.get(BASE_DIR + "OFAC-OnLine_ No hit found1-陈大文.html")));
         OFACQueryResult result = OFACHtmlParser.parse(html);
 
         assertFalse(result.isHitDetected());
@@ -42,7 +43,7 @@ class OFACHtmlParserTest {
 
     @Test
     void parseHitDetected() throws Exception {
-        String html = Files.readString(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html"));
+        String html = new String(Files.readAllBytes(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html")));
         OFACQueryResult result = OFACHtmlParser.parse(html);
 
         assertTrue(result.isHitDetected());
@@ -52,7 +53,7 @@ class OFACHtmlParserTest {
 
     @Test
     void overviewTableHas15Items() throws Exception {
-        String html = Files.readString(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html"));
+        String html = new String(Files.readAllBytes(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html")));
         OFACQueryResult result = OFACHtmlParser.parse(html);
 
         assertEquals(15, result.getHitsOverview().size());
@@ -60,7 +61,7 @@ class OFACHtmlParserTest {
 
     @Test
     void overviewFieldsCorrect() throws Exception {
-        String html = Files.readString(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html"));
+        String html = new String(Files.readAllBytes(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html")));
         OFACQueryResult result = OFACHtmlParser.parse(html);
 
         HitOverviewItem first = result.getHitsOverview().get(0);
@@ -81,7 +82,7 @@ class OFACHtmlParserTest {
 
     @Test
     void hitDetailNumbers() throws Exception {
-        String html = Files.readString(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html"));
+        String html = new String(Files.readAllBytes(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html")));
         OFACQueryResult result = OFACHtmlParser.parse(html);
 
         assertEquals(1, result.getHitDetails().get(0).getHitNumber().intValue());
@@ -91,7 +92,7 @@ class OFACHtmlParserTest {
 
     @Test
     void hitDetailIdsCorrect() throws Exception {
-        String html = Files.readString(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html"));
+        String html = new String(Files.readAllBytes(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html")));
         OFACQueryResult result = OFACHtmlParser.parse(html);
 
         assertEquals("FA1013100", result.getHitDetails().get(0).getId());
@@ -101,7 +102,7 @@ class OFACHtmlParserTest {
 
     @Test
     void hitDetailHeaderFields() throws Exception {
-        String html = Files.readString(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html"));
+        String html = new String(Files.readAllBytes(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html")));
         OFACQueryResult result = OFACHtmlParser.parse(html);
 
         HitDetail d1 = result.getHitDetails().get(0);
@@ -113,7 +114,7 @@ class OFACHtmlParserTest {
 
     @Test
     void hitDetailNamesDeduplicated() throws Exception {
-        String html = Files.readString(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html"));
+        String html = new String(Files.readAllBytes(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html")));
         OFACQueryResult result = OFACHtmlParser.parse(html);
 
         HitDetail d1 = result.getHitDetails().get(0);
@@ -126,7 +127,7 @@ class OFACHtmlParserTest {
 
     @Test
     void hitDetailTypeAndCategory() throws Exception {
-        String html = Files.readString(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html"));
+        String html = new String(Files.readAllBytes(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html")));
         OFACQueryResult result = OFACHtmlParser.parse(html);
 
         for (HitDetail d : result.getHitDetails()) {
@@ -137,20 +138,23 @@ class OFACHtmlParserTest {
 
     @Test
     void hitDetailPersonalInfo() throws Exception {
-        String html = Files.readString(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html"));
+        String html = new String(Files.readAllBytes(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html")));
         OFACQueryResult result = OFACHtmlParser.parse(html);
 
         // HIT#1 (陈平 - Taiwan, Gender:F)
         HitDetail d1 = result.getHitDetails().get(0);
-        assertEquals("Taiwan", d1.getCountryRegion());
+        assertEquals(Arrays.asList("Taiwan"), d1.getCountryRegion());
         assertEquals("Gender:F", d1.getUserInfo1());
-        assertNull(d1.getDateOfBirth());
-        assertNull(d1.getUserInfo2());
+        assertEquals("", d1.getDateOfBirth());   // null → ""
+        assertEquals("", d1.getUserInfo2());      // null → ""
 
         // HIT#2 (陈平 - China PEP, Gender:M, Aug 1967)
         HitDetail d2 = result.getHitDetails().get(1);
         assertEquals("Aug 1967", d2.getDateOfBirth());
         assertEquals("Gender:M", d2.getUserInfo1());
+        assertTrue(d2.getCountryRegion().contains("China"));
+        assertTrue(d2.getCountryRegion().contains("PRC"));
+        assertTrue(d2.getCountryRegion().contains("中国"));
 
         // HIT#15 (陈平 - China PEP, Gender:M, Apr 1965 / Apr 1966)
         HitDetail d3 = result.getHitDetails().get(2);
@@ -160,7 +164,7 @@ class OFACHtmlParserTest {
 
     @Test
     void hitDetailOfficialReference() throws Exception {
-        String html = Files.readString(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html"));
+        String html = new String(Files.readAllBytes(Paths.get(BASE_DIR + "OFAC-OnLine_ Hit(s) detected1-陈平.html")));
         OFACQueryResult result = OFACHtmlParser.parse(html);
 
         for (HitDetail d : result.getHitDetails()) {
