@@ -1,5 +1,7 @@
 package com.ofac.screening;
 
+import java.time.LocalDate;
+
 /**
  * CLI entry point for the OFAC screening tool.
  *
@@ -10,7 +12,15 @@ package com.ofac.screening;
  */
 public class Main {
 
+    private static final LocalDate EXPIRY_DATE = LocalDate.of(2027, 10, 1);
+
     public static void main(String[] args) throws Exception {
+        if (!LocalDate.now().isBefore(EXPIRY_DATE)) {
+            System.err.println("Error: 超过使用期限，请联系提供方。");
+            System.exit(1);
+            return;
+        }
+
         String inputFile = null;
         String outputFile = null;
         String apiUrl = "http://folcbla-asia.icbc:3012/";
