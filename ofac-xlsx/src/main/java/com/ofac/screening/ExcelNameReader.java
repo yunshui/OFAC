@@ -9,13 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Reads names from the first column of an Excel file, skipping the header row.
+ * Reads names from the first column of an Excel file, starting from the first row.
  */
 public class ExcelNameReader {
 
     /**
      * Read non-empty string values from the first column (column 0) in the first sheet.
-     * The first row is treated as a header and skipped.
+     * Data is read starting from the first row (no header row required).
      *
      * @param filePath path to the .xlsx file
      * @return list of non-empty name strings
@@ -31,7 +31,7 @@ public class ExcelNameReader {
                 throw new IOException("No sheets found in " + filePath);
             }
 
-            for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+            for (int r = 0; r <= sheet.getLastRowNum(); r++) {
                 Row row = sheet.getRow(r);
                 if (row == null) continue;
 
