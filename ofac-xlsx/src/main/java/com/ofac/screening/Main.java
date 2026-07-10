@@ -8,7 +8,7 @@ import java.time.LocalDate;
  * Usage:
  *   java -jar ofac-xlsx-1.0.0.jar \
  *        -i input.xlsx -o output.xlsx -u http://folcbla-asia.icbc:3012/ \
- *        [--user cbla] [--pass Oper1234] [--unit PEP00110] [--column "English Name"] [-n 10]
+ *        [--user cbla] [--pass Oper1234] [--unit PEP00110] [-n 10]
  */
 public class Main {
 

@@ -24,16 +24,21 @@ class ExcelNameReaderTest {
              FileOutputStream fos = new FileOutputStream(testFile)) {
             Sheet sheet = wb.createSheet("Names");
 
-            // Data rows starting from row 0 (no header)
-            sheet.createRow(0).createCell(0).setCellValue("John Doe");
-            sheet.createRow(1).createCell(0).setCellValue("Jane Smith");
-            sheet.createRow(2).createCell(0).setCellValue("陈平");
-            sheet.createRow(3).createCell(0).setCellValue("");  // empty cell
-            sheet.createRow(4).createCell(0).setCellValue("  "); // blank cell
-            sheet.createRow(5).createCell(0).setCellValue("Alice Wang");
-            // Row 6 with numeric value
-            Row row6 = sheet.createRow(6);
-            Cell numCell = row6.createCell(0);
+            // Header row (row 0)
+            Row header = sheet.createRow(0);
+            header.createCell(0).setCellValue("English Name");
+            header.createCell(1).setCellValue("Other");
+
+            // Data rows starting from row 1
+            sheet.createRow(1).createCell(0).setCellValue("John Doe");
+            sheet.createRow(2).createCell(0).setCellValue("Jane Smith");
+            sheet.createRow(3).createCell(0).setCellValue("陈平");
+            sheet.createRow(4).createCell(0).setCellValue("");  // empty cell
+            sheet.createRow(5).createCell(0).setCellValue("  "); // blank cell
+            sheet.createRow(6).createCell(0).setCellValue("Alice Wang");
+            // Row 7 with numeric value
+            Row row7 = sheet.createRow(7);
+            Cell numCell = row7.createCell(0);
             numCell.setCellValue(12345);
             CellStyle style = wb.createCellStyle();
             style.setDataFormat(wb.createDataFormat().getFormat("@"));
@@ -62,6 +67,12 @@ class ExcelNameReaderTest {
     }
 
     @Test
+    void readNamesExcludesHeaderRow() throws Exception {
+        List<String> names = ExcelNameReader.readNames(testFile.getAbsolutePath());
+        assertFalse(names.contains("English Name"));
+    }
+
+    @Test
     void readNamesExcludesEmptyCells() throws Exception {
         List<String> names = ExcelNameReader.readNames(testFile.getAbsolutePath());
         assertFalse(names.contains(""));
@@ -75,11 +86,14 @@ class ExcelNameReaderTest {
     }
 
     @Test
-    void readNamesReturnsEmptyForNoRows() throws Exception {
+    void readNamesReturnsEmptyForHeaderOnly() throws Exception {
+        // Create a file with only a header row, no data rows
         File emptyFile = File.createTempFile("ofac-empty-", ".xlsx");
         try (Workbook wb = new XSSFWorkbook();
              FileOutputStream fos = new FileOutputStream(emptyFile)) {
-            wb.createSheet("Empty");
+            Sheet sheet = wb.createSheet("Empty");
+            Row header = sheet.createRow(0);
+            header.createCell(0).setCellValue("English Name");
             wb.write(fos);
         }
 
@@ -92,20 +106,21 @@ class ExcelNameReaderTest {
     }
 
     @Test
-    void readNamesReadsFromFirstRow() throws Exception {
-        // Verify that row 0 is treated as data, not skipped
-        File f = File.createTempFile("ofac-firstrow-", ".xlsx");
+    void readNamesReadsFromSecondRow() throws Exception {
+        // Verify that row 0 (header) is skipped and row 1 is the first data row
+        File f = File.createTempFile("ofac-header-", ".xlsx");
         try (Workbook wb = new XSSFWorkbook();
              FileOutputStream fos = new FileOutputStream(f)) {
             Sheet sheet = wb.createSheet("Test");
-            sheet.createRow(0).createCell(0).setCellValue("FirstRow");
+            sheet.createRow(0).createCell(0).setCellValue("Header");
+            sheet.createRow(1).createCell(0).setCellValue("FirstData");
             wb.write(fos);
         }
 
         try {
             List<String> names = ExcelNameReader.readNames(f.getAbsolutePath());
             assertEquals(1, names.size());
-            assertEquals("FirstRow", names.get(0));
+            assertEquals("FirstData", names.get(0));
         } finally {
             f.delete();
         }
