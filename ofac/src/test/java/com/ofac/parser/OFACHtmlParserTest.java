@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class OFACHtmlParserTest {
 
-    private static final String BASE_DIR = "/Users/yunshuiyang/Workspace/OFAC/";
+    private static final String BASE_DIR = "/Users/yunshuiyang/Workspace/OFAC/data/";
 
     @Test
     void parseNoHit() throws Exception {
