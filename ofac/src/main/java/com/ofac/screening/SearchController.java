@@ -61,6 +61,39 @@ public class SearchController {
     }
 
     /**
+     * Query the OFAC blacklist API and return raw HTML response (unparsed).
+     */
+    @GetMapping(value = "/raw", produces = "text/html;charset=utf-8")
+    public ResponseEntity<String> searchRaw(
+            @RequestParam("name") String name,
+            @RequestParam(value = "url", required = false) String url,
+            @RequestParam(value = "user", required = false) String user,
+            @RequestParam(value = "pass", required = false) String pass,
+            @RequestParam(value = "unit", required = false) String unit) {
+
+        if (name == null || name.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body("<error>name parameter is required</error>");
+        }
+
+        String apiUrl = url != null ? url : DEFAULT_URL;
+        String apiUser = user != null ? user : DEFAULT_USER;
+        String apiPass = pass != null ? pass : DEFAULT_PASS;
+        String apiUnit = unit != null ? unit : DEFAULT_UNIT;
+
+        ApiConfig config = new ApiConfig(apiUrl, apiUser, apiPass, apiUnit);
+        BlacklistApiClient client = new BlacklistApiClient(config);
+
+        String html = client.query(name);
+        if (html == null) {
+            return ResponseEntity.status(502)
+                    .body("<error>API query failed for name: " + escapeHtml(name) + "</error>");
+        }
+
+        return ResponseEntity.ok(html);
+    }
+
+    /**
      * Basic JSON string escaping for error messages.
      */
     private static String escapeJson(String value) {
@@ -70,5 +103,15 @@ public class SearchController {
                 .replace("\n", "\\n")
                 .replace("\r", "\\r")
                 .replace("\t", "\\t");
+    }
+
+    /**
+     * Basic HTML escaping for error messages.
+     */
+    private static String escapeHtml(String value) {
+        if (value == null) return "";
+        return value.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
     }
 }
